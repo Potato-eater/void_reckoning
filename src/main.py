@@ -28,14 +28,20 @@ while True:
     game.process_world()
     if k[K_ESCAPE]:
         break
-    if k[K_SPACE] and game.mode == CameraMode.fixed and space_pressed == False:
+    if k[K_c] and game.mode == CameraMode.fixed and space_pressed == False:
         game.mode = CameraMode.rotated
         space_pressed = True
-    elif k[K_SPACE] and game.mode == CameraMode.rotated and space_pressed == False:
+    elif k[K_c] and game.mode == CameraMode.rotated and space_pressed == False:
         game.mode = CameraMode.fixed
         space_pressed = True
-    elif k[K_SPACE] == False:
+    elif k[K_c] == False:
         space_pressed = False
+    
+    game.process_world()
+    game.handle_input()
+    game.check_stars()
+    game.draw()
+    game.render_player()
     # print(space_pressed)
     pygame.display.flip()
     fpsClock.tick(fps)
