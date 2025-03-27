@@ -5,57 +5,99 @@ from maths import find_rotated_point
 import math
 import time
 class Star:
+    # a star object
+    # this is made to store values of each star in the background more easily
+    # x and y are the coordinates of the star
+    # radius is the radius of the star
     def __init__(self, x, y, radius):
         self.x = x
         self.y = y
         self.radius = radius
 class Asteroid:
+    # an asteroid object
+    # this is made to store values of each asteroid in the background more easily
+    # x and y are the coordinates of the asteroid
+    # vector is the vector of the asteroid, or how fast the asteroid is going
     def __init__(self, x, y, vector=[0,0,0]):
         self.x = x
         self.y = y
         self.vector = vector
 class CameraMode(Enum):
+    # there are two modes for the camera
+    # fixed mode is when the camera has a fixed angle
+    # the player would accelerate in the direction of the key press
+    # i.e.  w key would accelerate the player up, 
+    #       a key would accelerate the player left, etc.
+    # rotated mode is when the camera rotates with the player
+    # the player would always face towards the top of the screen
+    # pressing a and d keys would rotate the player (along with the camera)
     fixed = 0
-    # fixed_rotate = 1
     rotated = 1
 class World:
+    # the world object
+    # since all the functions are using the same variables and are closely related to each other,
+    # I put everything inside of the same class so that they can access each other's variables
     def __init__(self, screen_size: tuple[int, int], render_distance: int):
+        '''
+        Initializes the world object
+
+        defines all the variables that other methods would use
+        '''
         # generate everything
-        self.stars = []
-        self.asteroids = []
+        self.stars = [] # all the stars in the background, would be stored in as an array of Star objects
+        self.asteroids = [] # all the asteroids in the background, would be stored in as an array of Asteroid objects
+        self.laser_list = [] # all the lasers in the background, would be stored in as an array of pygame.Rect objects
+        self.laser_images = [] # since each laser has a different angle, we need to store the image of each laser
+        self.laser_vectors = [] # the vector of each laser
+
+        # adding 5 asteroids to the world
         for _i in range(5):
             self.asteroids.append(Asteroid(randint(0, screen_size[0]), randint(0, screen_size[1]), [randint(-2, 2), randint(-2, 2), 0]))
+        
         self.screen_size = screen_size # (width, height)
         self.render_distance = render_distance # when to calculate things
         # self.coordinates = [0,0,0] # where the player is at
         self.rotated_angle = 0 # how much the player has rotated, not used if it is currently fixed mode
         self.mode: CameraMode = CameraMode.fixed # what mode the camera is in
-        self.vector = [0,0,0] # how the player's coordinates would increase each loop (x, y, r)
+        self.vector = [0,2,0] # how the player's coordinates would increase each loop (x, y, r)
         self.face_angle = 0 # the angle the player is facing
         self.max_speed = 150 # how fast the player can go
-        self.laser_list = []
+        self.max_angular_speed = 1.8 # how fast the player can rotate (in radians)
+        # defining all the images
         self.base_laser_image = pygame.transform.scale(pygame.image.load("assets/images/laser.png"), (50, 100))
         self.base_asteroid_image = pygame.transform.scale(pygame.image.load("assets/images/asteroid.png"), (80, 80))
         self.base_spaceship_image = pygame.transform.scale(pygame.image.load("assets/images/spaceship.png"), (100, 100))
-        self.laser_images = []
-        self.laser_vectors = []
+
+        # creating a stopwatch, used in the laser_init method
         self.stopwatch = time.time()
-        for i in range(800):
-            x = randint(-self.render_distance, self.screen_size[0] + self.render_distance)
-            y = randint(-self.render_distance, self.screen_size[1] + self.render_distance)
+
+        # creating the stars in the background
+        for _i in range(800):
+            x = randint(-self.render_distance, self.screen_size[0] + self.render_distance) # random x coordinate
+            y = randint(-self.render_distance, self.screen_size[1] + self.render_distance) # random y coordinate
+
+             # the star's radius can range from 1 to 3 so that the background is more diverse
+             # and looks more interesting
             radius = randint(1, 3)
-            self.stars.append(Star(x, y, radius))
+            self.stars.append(Star(x, y, radius)) # adding each star to the list
+
     def laser_init(self):
+        '''
+        initializes a laser bullet
+
+        when this method is called, a laser bullet would be created
+        '''
         image = self.base_laser_image
         if self.mode == CameraMode.fixed:
             
+            # getting the rotated image and its rect object
             image = pygame.transform.rotate(image, math.degrees(-math.atan2(self.vector[1], self.vector[0])) - 90)
             laser_rect = image.get_rect(center=(
                 self.screen_size[0] // 2 - self.vector[0] * 10,
                 self.screen_size[1] // 2 - self.vector[1] * 10
             ))
-            # laser_rect.centerx = self.screen_size[0] // 2 - self.vector[0] * 10
-            # laser_rect.centery = self.screen_size[1] // 2 - self.vector[1] * 10
+
+            # adding the rect object to the list
             self.laser_list.append(laser_rect)
             # magnitude = self.vector[0] ** 2 + self.vector[1] ** 2
             x = -self.vector[0] * 2
@@ -73,7 +115,11 @@ class World:
             r = 0
             self.laser_vectors.append([x,y,r])
             self.laser_images.append(image)
+
     def render_player(self):
+        '''
+        renders the player's spaceship
+        '''
         screen = pygame.display.get_surface()
         spaceship_image = self.base_spaceship_image
 
@@ -94,7 +140,12 @@ class World:
 
         # Draw the image at the corrected position
         screen.blit(rotated_image, rotated_rect.topleft)
+
+    
     def render_lasers(self):
+        '''
+        renders the each laser bullet
+        '''
         screen = pygame.display.get_surface()
         for i in range(len(self.laser_list)):
             self.laser_images[i] = pygame.transform.rotate(self.base_laser_image, math.degrees(-math.atan2(self.laser_vectors[i][1], self.laser_vectors[i][0])) - 90)
@@ -102,6 +153,9 @@ class World:
             screen.blit(self.laser_images[i], rotated_rect)
         
     def draw(self):
+        '''
+        draws everything on the screen
+        '''
         screen = pygame.display.get_surface()
         # if self.mode == CameraMode.fixed:
         for star in self.stars:
@@ -113,10 +167,10 @@ class World:
             screen.blit(self.base_asteroid_image, (asteroid_rect.left, asteroid_rect.top))
         self.render_lasers()
         self.render_player()
-        # for i in range(len(self.laser_list)):
-        #     screen.blit(self.laser_images[i], (self.laser_list[i].left, self.laser_list[i].top))
-        # pygame.draw.rect(screen, (255, 0, 0), (self.screen_size[0] // 2 - 25 - self.vector[0] * 5, self.screen_size[1] // 2 - 25 - self.vector[1] * 5, 50, 50))
     def check_stars(self):
+        '''
+        checks if the stars are out of the screen, if they are, regenerate them
+        '''
         for star in self.stars:
             if star.x < -self.render_distance:
                 star.x = randint(self.screen_size[0], self.screen_size[0] + self.render_distance)
@@ -128,6 +182,9 @@ class World:
                 star.y = randint(-self.render_distance, 1)
         # print(self.vector[1])
     def handle_input(self):
+        '''
+        taking input from the player and moving the player accordingly
+        '''
         keys = pygame.key.get_pressed()
         current_speed = self.vector[0] ** 2 + self.vector[1] ** 2
         max_speed = self.max_speed
@@ -148,9 +205,9 @@ class World:
                 self.vector[2] *= 0.95
         elif self.mode == CameraMode.rotated:
             # self.vector[0], self.vector[1] = find_rotated_point(self.vector[0], self.vector[1], -self.vector[2])
-            if keys[pygame.K_a]:
+            if keys[pygame.K_a] and self.vector[2] < self.max_angular_speed:
                 self.vector[2] += 0.01
-            if keys[pygame.K_d]:
+            if keys[pygame.K_d] and self.vector[2] > -self.max_angular_speed:
                 self.vector[2] -= 0.01
             if any([keys[pygame.K_a], keys[pygame.K_d]]) == False:
                 self.vector[2] *= 0.95
@@ -170,6 +227,9 @@ class World:
         self.vector[0], self.vector[1] = find_rotated_point(self.vector[0], self.vector[1], self.vector[2])
     
     def handle_collision(self):
+        '''
+        calculates the collision between the player and the asteroids, and the asteroids with each other
+        '''
         # player and asteroid
         for asteroid in self.asteroids:
             asteroid_collis_check_rect = pygame.rect.Rect(asteroid.x - 40, asteroid.y - 40, 80, 80)
@@ -197,12 +257,20 @@ class World:
                     self.asteroids[i].vector[0], self.asteroids[j].vector[0] = self.asteroids[j].vector[0], self.asteroids[i].vector[0]
                     self.asteroids[i].vector[1], self.asteroids[j].vector[1] = self.asteroids[j].vector[1], self.asteroids[i].vector[1]
     def process_world(self):
+        '''
+        processes the world
+        updates the coordinates of every object in the game
+        '''
+
+        # moving the star
         for star in self.stars:
             star.x, star.y = find_rotated_point(star.x - self.screen_size[0] / 2, star.y - self.screen_size[1] / 2, self.vector[2])
             star.x += self.screen_size[0] / 2
             star.y += self.screen_size[1] / 2
             star.x += self.vector[0]
             star.y += self.vector[1]
+
+        # moving the asteroids
         for asteroid in self.asteroids:
             asteroid.vector[0], asteroid.vector[1] = find_rotated_point(asteroid.vector[0], asteroid.vector[1], self.vector[2])
             asteroid.x, asteroid.y = find_rotated_point(asteroid.x - self.screen_size[0] / 2, asteroid.y - self.screen_size[1] / 2, self.vector[2])
@@ -212,6 +280,8 @@ class World:
             asteroid.y += self.vector[1]
             asteroid.x += asteroid.vector[0]
             asteroid.y += asteroid.vector[1]
+
+            # if the asteroid is out of the screen, regenerate it
             if asteroid.x < -self.render_distance:
                 asteroid.x = randint(self.screen_size[0], self.screen_size[0] + self.render_distance)
                 asteroid.vector[0], asteroid.vector[1] = randint(0, 5), randint(0, 5)
@@ -226,6 +296,8 @@ class World:
                 asteroid.vector[0], asteroid.vector[1] = randint(0, 5), randint(0, 5)
 
         remove_list = []
+
+        # moving the lasers
         for i in range(len(self.laser_list)):
             self.laser_vectors[i][0], self.laser_vectors[i][1] = find_rotated_point(self.laser_vectors[i][0] , self.laser_vectors[i][1], self.vector[2])
             self.laser_list[i].x, self.laser_list[i].y = find_rotated_point(self.laser_list[i].x - self.screen_size[0] / 2, self.laser_list[i].y - self.screen_size[1] / 2, self.vector[2])
@@ -237,20 +309,20 @@ class World:
             self.laser_list[i].y += self.laser_vectors[i][1]
             self.laser_list[i].x += self.vector[0]
             self.laser_list[i].y += self.vector[1]
-            # remove_laser = False
-            # pygame.draw.rect(,asteroid.x - 40, asteroid.y - 40, 80, 80)
+
+            # if the laser hit an asteroid, remove the asteroid and the laser
             for asteroid in self.asteroids:
                 if self.laser_list[i].colliderect(pygame.rect.Rect(asteroid.x - 40, asteroid.y - 40, 80, 80)):
                     print("hit")
                     self.asteroids.remove(asteroid)
                     remove_list.append(i)
                     self.asteroids.append(Asteroid(-100, randint(-100, self.screen_size[0] + 100), [randint(0, 5),randint(0, 5),0]))
-        # if remove_laser:
-        #     self.laser_list.pop(i)
-        #     self.laser_vectors.pop(i)
-        #     self.laser_images.pop(i)
+        
+        # calls method to handle collisions between the player and asteroids
         self.handle_collision()
-        # print (len(self.laser_list) == len(self.laser_vectors) == len(self.laser_images))
+
+        # removing lasers that need to be removed (because they hit an asteroid)
+        # this is done after the loop because removing an element in the middle of the loop would cause an error
         for i in remove_list:
             try:
                 self.laser_list.pop(i)
@@ -260,8 +332,20 @@ class World:
                 pass
         
         self.face_angle += self.vector[2]
-        print(self.mode)
+        # print(self.vector[2])
         # print(self.vector)
         # self.coordinates[2] += self.vector[2] 
         # self.handle_input_rotated()
 
+    def debug(self):
+        '''
+        prints the debug information
+        '''
+        print(self.vector)
+        # print(self.face_angle)
+        # print(self.mode)
+        # print(self.laser_list)
+        # print(self.laser_vectors)
+        # # print(self.laser_images)
+        # print(self.stars)
+        # print(self.asteroids)
