@@ -23,7 +23,7 @@ class World:
         # generate everything
         self.stars = []
         self.asteroids = []
-        for _i in range(10):
+        for _i in range(5):
             self.asteroids.append(Asteroid(randint(0, screen_size[0]), randint(0, screen_size[1]), [randint(-2, 2), randint(-2, 2), 0]))
         self.screen_size = screen_size # (width, height)
         self.render_distance = render_distance # when to calculate things
@@ -112,6 +112,7 @@ class World:
             asteroid_rect.centery = asteroid.y
             screen.blit(self.base_asteroid_image, (asteroid_rect.left, asteroid_rect.top))
         self.render_lasers()
+        self.render_player()
         # for i in range(len(self.laser_list)):
         #     screen.blit(self.laser_images[i], (self.laser_list[i].left, self.laser_list[i].top))
         # pygame.draw.rect(screen, (255, 0, 0), (self.screen_size[0] // 2 - 25 - self.vector[0] * 5, self.screen_size[1] // 2 - 25 - self.vector[1] * 5, 50, 50))
@@ -178,7 +179,14 @@ class World:
                 self.vector[0], asteroid.vector[0] = -asteroid.vector[0], -self.vector[0]
                 self.vector[1], asteroid.vector[1] = -asteroid.vector[1], -self.vector[1]
                 print("collision")
-        
+            if asteroid_collis_check_rect.colliderect(player_collis_check_rect) and asteroid.x > self.screen_size[0] // 2:
+                asteroid.x += 1
+            if asteroid_collis_check_rect.colliderect(player_collis_check_rect) and asteroid.x < self.screen_size[0] // 2:
+                asteroid.x -= 1
+            if asteroid_collis_check_rect.colliderect(player_collis_check_rect) and asteroid.y > self.screen_size[1] // 2:
+                asteroid.y += 1
+            if asteroid_collis_check_rect.colliderect(player_collis_check_rect) and asteroid.y < self.screen_size[1] // 2:
+                asteroid.y -= 1
         for i in range(len(self.asteroids)):
             for j in range(i + 1, len(self.asteroids)):
                 if i == j:
@@ -206,12 +214,16 @@ class World:
             asteroid.y += asteroid.vector[1]
             if asteroid.x < -self.render_distance:
                 asteroid.x = randint(self.screen_size[0], self.screen_size[0] + self.render_distance)
+                asteroid.vector[0], asteroid.vector[1] = randint(0, 5), randint(0, 5)
             if asteroid.x > self.screen_size[0] + self.render_distance:
                 asteroid.x = randint(-self.render_distance, 0)
+                asteroid.vector[0], asteroid.vector[1] = randint(0, 5), randint(0, 5)
             if asteroid.y < -self.render_distance:
                 asteroid.y = randint(self.screen_size[1], self.screen_size[1] + self.render_distance)
+                asteroid.vector[0], asteroid.vector[1] = randint(0, 5), randint(0, 5)
             if asteroid.y > self.screen_size[1] + self.render_distance:
                 asteroid.y = randint(-self.render_distance, 1)
+                asteroid.vector[0], asteroid.vector[1] = randint(0, 5), randint(0, 5)
 
         remove_list = []
         for i in range(len(self.laser_list)):

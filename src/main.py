@@ -41,7 +41,6 @@ while True:
     game.handle_input()
     game.check_stars()
     game.draw()
-    game.render_player()
     # print(space_pressed)
     pygame.display.flip()
     fpsClock.tick(fps)
