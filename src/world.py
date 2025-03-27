@@ -98,7 +98,7 @@ class World:
         screen = pygame.display.get_surface()
         for i in range(len(self.laser_list)):
             self.laser_images[i] = pygame.transform.rotate(self.base_laser_image, math.degrees(-math.atan2(self.laser_vectors[i][1], self.laser_vectors[i][0])) - 90)
-            rotated_rect = self.laser_images[i].get_rect(center=(self.laser_list[i].x, self.laser_list[i].y))
+            rotated_rect = self.laser_images[i].get_rect(center=(self.laser_list[i].centerx, self.laser_list[i].centery))
             screen.blit(self.laser_images[i], rotated_rect)
         
     def draw(self):
@@ -140,9 +140,9 @@ class World:
             if keys[pygame.K_d] and current_speed < max_speed: # if d key is pressed, accelerate right
                 self.vector[0] -= 0.1
             if any([keys[pygame.K_w], keys[pygame.K_s]]) == False or current_speed > max_speed: # if w and s key is not pressed, slow down in the y axis
-                self.vector[1] *= 0.999
+                self.vector[1] *= 0.995
             if any([keys[pygame.K_a], keys[pygame.K_d]]) == False or current_speed > max_speed: # if a and d key is not pressed, slow down in the x axis
-                self.vector[0] *= 0.999
+                self.vector[0] *= 0.995
             if self.vector[2]:
                 self.vector[2] *= 0.95
         elif self.mode == CameraMode.rotated:
@@ -159,8 +159,8 @@ class World:
             if keys[pygame.K_s] and current_speed < max_speed:
                 self.vector[1] -= 0.1
             if any([keys[pygame.K_w], keys[pygame.K_s]]) == False or current_speed > max_speed: # if w and s key is not pressed, slow down in the y axis
-                self.vector[0] *= 0.999
-                self.vector[1] *= 0.999
+                self.vector[0] *= 0.995
+                self.vector[1] *= 0.995
         
         if keys[pygame.K_e] and (time.time() - self.stopwatch) > 0.5:
             
