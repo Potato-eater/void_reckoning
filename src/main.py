@@ -9,7 +9,7 @@ fps = 60
 fpsClock = pygame.time.Clock()
   
 screen_info = pygame.display.Info()
-width, height = screen_info.current_w, screen_info.current_h - 200
+width, height = screen_info.current_w, screen_info.current_h
 # screen = pygame.display.set_mode((800, 300))
 screen = pygame.display.set_mode((width, height))
 game = World((width, height), 800)

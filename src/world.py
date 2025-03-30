@@ -60,9 +60,10 @@ class World:
         self.rotated_angle = 0 # how much the player has rotated, not used if it is currently fixed mode
         self.mode: CameraMode = CameraMode.fixed # what mode the camera is in
         self.vector = [0,2,0] # how the player's coordinates would increase each loop (x, y, r)
-        self.face_angle = 0 # the angle the player is facing
-        self.max_speed = 150 # how fast the player can go
-        self.max_angular_speed = 1.8 # how fast the player can rotate (in radians)
+        self.face_angle_fixed = 0 # the angle the player is facing
+        self.face_angle = 0 # the angle the player is facing, used in the rotated mode
+        self.max_speed = 12 # how fast the player can go
+        self.max_angular_speed = 1 # how fast the player can rotate (in radians)
         # defining all the images
         self.base_laser_image = pygame.transform.scale(pygame.image.load("assets/images/laser.png"), (50, 100))
         self.base_asteroid_image = pygame.transform.scale(pygame.image.load("assets/images/asteroid.png"), (80, 80))
@@ -100,8 +101,7 @@ class World:
             # adding the rect object to the list
             self.laser_list.append(laser_rect)
             # magnitude = self.vector[0] ** 2 + self.vector[1] ** 2
-            x = -self.vector[0] * 2
-            y = -self.vector[1] * 2
+            x, y = find_rotated_point(0.0, 15.0, math.degrees(self.face_angle_fixed) + 90.0);
             r = self.vector[2]
             self.laser_vectors.append([x,y,r])
             self.laser_images.append(image)
@@ -111,11 +111,10 @@ class World:
                 self.screen_size[1] // 2 - self.vector[1] * 10
             ))
             self.laser_list.append(laser_rect)
-            x, y = find_rotated_point(0, math.sqrt(self.vector[0] ** 2 + self.vector[1] ** 2) * -2, -self.vector[2])
+            x, y = 0, -15.0;
             r = 0
             self.laser_vectors.append([x,y,r])
             self.laser_images.append(image)
-
     def render_player(self):
         '''
         renders the player's spaceship
@@ -151,7 +150,21 @@ class World:
             self.laser_images[i] = pygame.transform.rotate(self.base_laser_image, math.degrees(-math.atan2(self.laser_vectors[i][1], self.laser_vectors[i][0])) - 90)
             rotated_rect = self.laser_images[i].get_rect(center=(self.laser_list[i].centerx, self.laser_list[i].centery))
             screen.blit(self.laser_images[i], rotated_rect)
-        
+    
+    def render_asteroids(self):
+        '''
+        renders the asteroids
+        '''
+        screen = pygame.display.get_surface()
+        for asteroid in self.asteroids:
+            image = pygame.transform.rotate(self.base_asteroid_image, -self.face_angle)
+            asteroid_rect = self.base_asteroid_image.get_rect(center=(
+                asteroid.x,
+                asteroid.y
+            ))
+            asteroid_rect.centerx = asteroid.x
+            asteroid_rect.centery = asteroid.y
+            screen.blit(image, asteroid_rect)
     def draw(self):
         '''
         draws everything on the screen
@@ -160,11 +173,12 @@ class World:
         # if self.mode == CameraMode.fixed:
         for star in self.stars:
             pygame.draw.circle(screen, (255, 255, 255), (star.x, star.y), star.radius)
-        for asteroid in self.asteroids:
-            asteroid_rect = self.base_asteroid_image.get_rect()
-            asteroid_rect.centerx = asteroid.x
-            asteroid_rect.centery = asteroid.y
-            screen.blit(self.base_asteroid_image, (asteroid_rect.left, asteroid_rect.top))
+        # for asteroid in self.asteroids:
+        #     asteroid_rect = self.base_asteroid_image.get_rect()
+        #     asteroid_rect.centerx = asteroid.x
+        #     asteroid_rect.centery = asteroid.y
+        #     screen.blit(self.base_asteroid_image, (asteroid_rect.left, asteroid_rect.top))
+        self.render_asteroids()
         self.render_lasers()
         self.render_player()
     def check_stars(self):
@@ -183,10 +197,10 @@ class World:
         # print(self.vector[1])
     def handle_input(self):
         '''
-        taking input from the player and moving the player accordingly
+        taking input from the player and changing the player's vector accordingly
         '''
         keys = pygame.key.get_pressed()
-        current_speed = self.vector[0] ** 2 + self.vector[1] ** 2
+        current_speed = math.sqrt(self.vector[0] ** 2 + self.vector[1] ** 2)
         max_speed = self.max_speed
         if self.mode == CameraMode.fixed:
             if keys[pygame.K_w] and current_speed < max_speed: # if w key is pressed, accelerate up
@@ -220,7 +234,7 @@ class World:
                 self.vector[0] *= 0.995
                 self.vector[1] *= 0.995
         
-        if keys[pygame.K_e] and (time.time() - self.stopwatch) > 0.5:
+        if keys[pygame.K_e] and (time.time() - self.stopwatch) > 0.5 and len(self.laser_list) < 20:
             
             self.laser_init()
             self.stopwatch = time.time()
@@ -261,7 +275,7 @@ class World:
         processes the world
         updates the coordinates of every object in the game
         '''
-
+        self.face_angle_fixed = math.atan2(self.vector[1], self.vector[0])
         # moving the star
         for star in self.stars:
             star.x, star.y = find_rotated_point(star.x - self.screen_size[0] / 2, star.y - self.screen_size[1] / 2, self.vector[2])
@@ -309,7 +323,8 @@ class World:
             self.laser_list[i].y += self.laser_vectors[i][1]
             self.laser_list[i].x += self.vector[0]
             self.laser_list[i].y += self.vector[1]
-
+            if self.laser_list[i].x < -self.render_distance or self.laser_list[i].x > self.screen_size[0] + self.render_distance or self.laser_list[i].y < -self.render_distance or self.laser_list[i].y > self.screen_size[1] + self.render_distance:
+                remove_list.append(i)
             # if the laser hit an asteroid, remove the asteroid and the laser
             for asteroid in self.asteroids:
                 if self.laser_list[i].colliderect(pygame.rect.Rect(asteroid.x - 40, asteroid.y - 40, 80, 80)):
@@ -341,8 +356,8 @@ class World:
         '''
         prints the debug information
         '''
-        print(self.vector)
-        # print(self.face_angle)
+        # print(len(self.laser_list))
+        print(self.face_angle)
         # print(self.mode)
         # print(self.laser_list)
         # print(self.laser_vectors)
