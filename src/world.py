@@ -165,7 +165,7 @@ class World:
             asteroid_rect.centerx = asteroid.x
             asteroid_rect.centery = asteroid.y
             screen.blit(image, asteroid_rect)
-    def draw(self):
+    def draw(self, current_fps):
         '''
         draws everything on the screen
         '''
@@ -185,7 +185,8 @@ class World:
         screen.blit(self.font.render("press c to change camera mode", True, (255, 255, 255)), (10, 30))
         screen.blit(self.font.render("press e to shoot", True, (255, 255, 255)), (10, 50))
         screen.blit(self.font.render("press esc to exit", True, (255, 255, 255)), (10, 70))
-        
+        screen.blit(self.font.render("press space to slow down", True, (255, 255, 255)), (10, 90))
+        screen.blit(self.font.render(f"current fps: {round(current_fps, 2)}", True, (255, 255, 255)), (10, 110))
     def check_stars(self):
         '''
         checks if the stars are out of the screen, if they are, regenerate them
@@ -200,50 +201,59 @@ class World:
             if star.y > self.screen_size[1] + self.render_distance:
                 star.y = randint(-self.render_distance, 1)
         # print(self.vector[1])
+
+    def handle_player_acceleration_fixed(self, keys, max_speed):
+        current_speed = math.sqrt(self.vector[0] ** 2 + self.vector[1] ** 2)
+        if keys[pygame.K_w] and current_speed < max_speed: # if w key is pressed, accelerate up
+            self.vector[1] += 0.1
+        if keys[pygame.K_s] and current_speed < max_speed: # if s key is pressed, accelerate down
+            self.vector[1] -= 0.1
+        if keys[pygame.K_a] and current_speed < max_speed: # if a key is pressed, accelerate left
+            self.vector[0] += 0.1
+        if keys[pygame.K_d] and current_speed < max_speed: # if d key is pressed, accelerate right
+            self.vector[0] -= 0.1
+        if any([keys[pygame.K_w], keys[pygame.K_s], keys[pygame.K_SPACE]]) == False or current_speed > max_speed: # if w and s key is not pressed, slow down in the y axis
+            self.vector[1] *= 0.995
+        if any([keys[pygame.K_a], keys[pygame.K_d], keys[pygame.K_SPACE]]) == False or current_speed > max_speed: # if a and d key is not pressed, slow down in the x axis
+            self.vector[0] *= 0.995
+        if self.vector[2]:
+            self.vector[2] *= 0.95
+    def handle_player_acceleration_rotated(self, keys, max_speed):
+        current_speed = math.sqrt(self.vector[0] ** 2 + self.vector[1] ** 2)
+        if keys[pygame.K_a] and self.vector[2] < self.max_angular_speed:
+            self.vector[2] += 0.01
+        if keys[pygame.K_d] and self.vector[2] > -self.max_angular_speed:
+            self.vector[2] -= 0.01
+        if any([keys[pygame.K_a], keys[pygame.K_d]]) == False:
+            self.vector[2] *= 0.95
+        
+        if keys[pygame.K_w] and current_speed < max_speed:
+            self.vector[1] += 0.1
+        if keys[pygame.K_s] and current_speed < max_speed:
+            self.vector[1] -= 0.1
+        if any([keys[pygame.K_w], keys[pygame.K_s]]) == False or current_speed > max_speed: # if w and s key is not pressed, slow down in the y axis
+            self.vector[0] *= 0.995
+            self.vector[1] *= 0.995
+    def swap_camera_mode(self):
+        if self.mode == CameraMode.fixed:
+            self.mode = CameraMode.rotated
+        else:
+            self.mode = CameraMode.fixed
     def handle_input(self, keys, c_pressed: bool):
         '''
         taking input from the player and changing the player's vector accordingly
         '''
         # keys = pygame.key.get_pressed()
-        current_speed = math.sqrt(self.vector[0] ** 2 + self.vector[1] ** 2)
-        max_speed = self.max_speed
-        print(c_pressed, keys[pygame.K_c])
+        # print(c_pressed, keys[pygame.K_c])
+
+
         if c_pressed == False and keys[pygame.K_c]:
-            if self.mode == CameraMode.fixed:
-                self.mode = CameraMode.rotated
-            else:
-                self.mode = CameraMode.fixed
+            self.swap_camera_mode()
+        
         if self.mode == CameraMode.fixed:
-            if keys[pygame.K_w] and current_speed < max_speed: # if w key is pressed, accelerate up
-                self.vector[1] += 0.1
-            if keys[pygame.K_s] and current_speed < max_speed: # if s key is pressed, accelerate down
-                self.vector[1] -= 0.1
-            if keys[pygame.K_a] and current_speed < max_speed: # if a key is pressed, accelerate left
-                self.vector[0] += 0.1
-            if keys[pygame.K_d] and current_speed < max_speed: # if d key is pressed, accelerate right
-                self.vector[0] -= 0.1
-            if any([keys[pygame.K_w], keys[pygame.K_s], keys[pygame.K_SPACE]]) == False or current_speed > max_speed: # if w and s key is not pressed, slow down in the y axis
-                self.vector[1] *= 0.995
-            if any([keys[pygame.K_a], keys[pygame.K_d], keys[pygame.K_SPACE]]) == False or current_speed > max_speed: # if a and d key is not pressed, slow down in the x axis
-                self.vector[0] *= 0.995
-            if self.vector[2]:
-                self.vector[2] *= 0.95
+            self.handle_player_acceleration_fixed(keys, self.max_speed)
         elif self.mode == CameraMode.rotated:
-            # self.vector[0], self.vector[1] = find_rotated_point(self.vector[0], self.vector[1], -self.vector[2])
-            if keys[pygame.K_a] and self.vector[2] < self.max_angular_speed:
-                self.vector[2] += 0.01
-            if keys[pygame.K_d] and self.vector[2] > -self.max_angular_speed:
-                self.vector[2] -= 0.01
-            if any([keys[pygame.K_a], keys[pygame.K_d]]) == False:
-                self.vector[2] *= 0.95
-            
-            if keys[pygame.K_w] and current_speed < max_speed:
-                self.vector[1] += 0.1
-            if keys[pygame.K_s] and current_speed < max_speed:
-                self.vector[1] -= 0.1
-            if any([keys[pygame.K_w], keys[pygame.K_s]]) == False or current_speed > max_speed: # if w and s key is not pressed, slow down in the y axis
-                self.vector[0] *= 0.995
-                self.vector[1] *= 0.995
+            self.handle_player_acceleration_rotated(keys, self.max_speed)
         
         if keys[pygame.K_e] and (time.time() - self.stopwatch) > 0.5 and len(self.laser_list) < 20:
             
@@ -251,9 +261,9 @@ class World:
             self.stopwatch = time.time()
         self.vector[0], self.vector[1] = find_rotated_point(self.vector[0], self.vector[1], self.vector[2])
         if keys[pygame.K_SPACE]:
-                self.vector[0] *= 0.9
-                self.vector[1] *= 0.9
-                self.vector[2] *= 0.9
+                self.vector[0] *= 0.97
+                self.vector[1] *= 0.97
+                self.vector[2] *= 0.97
     def handle_collision(self):
         '''
         calculates the collision between the player and the asteroids, and the asteroids with each other

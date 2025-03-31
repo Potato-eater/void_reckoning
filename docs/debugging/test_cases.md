@@ -1,4 +1,4 @@
-# example of using tracetables to debug
+# example of using test cases to debug
 ## testing the find_rotated_point function, calculated by hand
 ### Test Case 1  
 **Input:** (x1, y1, angle) = (0, 1, 90)  

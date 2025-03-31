@@ -28,14 +28,15 @@ while True:
     game.process_world()
     if k[K_ESCAPE]:
         break
+    current_fps = fpsClock.get_fps()
     # print(space_pressed)
     game.process_world()
     game.handle_input(k, c_pressed)
     game.check_stars()
-    game.draw()
+    game.draw(current_fps)
     game.debug()
     # print(space_pressed)
     pygame.display.flip()
     fpsClock.tick(fps)
-    print(fpsClock.get_fps())
+    # print(fpsClock.get_fps())
     c_pressed = k[K_c]
