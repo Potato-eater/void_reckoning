@@ -14,7 +14,7 @@ width, height = screen_info.current_w, screen_info.current_h
 screen = pygame.display.set_mode((width, height))
 game = World((width, height), 800)
 # Game loop.
-space_pressed = False
+c_pressed = False
 while True:
     screen.fill((0, 0, 0))
   
@@ -28,20 +28,14 @@ while True:
     game.process_world()
     if k[K_ESCAPE]:
         break
-    if k[K_c] and game.mode == CameraMode.fixed and space_pressed == False:
-        game.mode = CameraMode.rotated
-        space_pressed = True
-    elif k[K_c] and game.mode == CameraMode.rotated and space_pressed == False:
-        game.mode = CameraMode.fixed
-        space_pressed = True
-    elif k[K_c] == False:
-        space_pressed = False
-    
+    # print(space_pressed)
     game.process_world()
-    game.handle_input()
+    game.handle_input(k, c_pressed)
     game.check_stars()
     game.draw()
     game.debug()
     # print(space_pressed)
     pygame.display.flip()
     fpsClock.tick(fps)
+    print(fpsClock.get_fps())
+    c_pressed = k[K_c]

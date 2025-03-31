@@ -68,7 +68,7 @@ class World:
         self.base_laser_image = pygame.transform.scale(pygame.image.load("assets/images/laser.png"), (50, 100))
         self.base_asteroid_image = pygame.transform.scale(pygame.image.load("assets/images/asteroid.png"), (80, 80))
         self.base_spaceship_image = pygame.transform.scale(pygame.image.load("assets/images/spaceship.png"), (100, 100))
-
+        self.font = pygame.font.SysFont("Arial", 20)
         # creating a stopwatch, used in the laser_init method
         self.stopwatch = time.time()
 
@@ -94,8 +94,8 @@ class World:
             # getting the rotated image and its rect object
             image = pygame.transform.rotate(image, math.degrees(-math.atan2(self.vector[1], self.vector[0])) - 90)
             laser_rect = image.get_rect(center=(
-                self.screen_size[0] // 2 - self.vector[0] * 10,
-                self.screen_size[1] // 2 - self.vector[1] * 10
+                self.screen_size[0] // 2 - self.vector[0] * 6,
+                self.screen_size[1] // 2 - self.vector[1] * 6
             ))
 
             # adding the rect object to the list
@@ -107,8 +107,8 @@ class World:
             self.laser_images.append(image)
         elif self.mode == CameraMode.rotated:
             laser_rect = image.get_rect(center=(
-                self.screen_size[0] // 2 - self.vector[0] * 10,
-                self.screen_size[1] // 2 - self.vector[1] * 10
+                self.screen_size[0] // 2 - self.vector[0] * 6,
+                self.screen_size[1] // 2 - self.vector[1] * 6
             ))
             self.laser_list.append(laser_rect)
             x, y = 0, -15.0;
@@ -133,8 +133,8 @@ class World:
 
         # Get the new rect, centered at the intended position
         rotated_rect = rotated_image.get_rect(center=(
-            self.screen_size[0] // 2 - self.vector[0] * 5, 
-            self.screen_size[1] // 2 - self.vector[1] * 5
+            self.screen_size[0] // 2 - self.vector[0] * 6, 
+            self.screen_size[1] // 2 - self.vector[1] * 6
         ))
 
         # Draw the image at the corrected position
@@ -181,6 +181,11 @@ class World:
         self.render_asteroids()
         self.render_lasers()
         self.render_player()
+        screen.blit(self.font.render("use wasd to control direction", True, (255, 255, 255)), (10, 10))
+        screen.blit(self.font.render("press c to change camera mode", True, (255, 255, 255)), (10, 30))
+        screen.blit(self.font.render("press e to shoot", True, (255, 255, 255)), (10, 50))
+        screen.blit(self.font.render("press esc to exit", True, (255, 255, 255)), (10, 70))
+        
     def check_stars(self):
         '''
         checks if the stars are out of the screen, if they are, regenerate them
@@ -195,13 +200,19 @@ class World:
             if star.y > self.screen_size[1] + self.render_distance:
                 star.y = randint(-self.render_distance, 1)
         # print(self.vector[1])
-    def handle_input(self):
+    def handle_input(self, keys, c_pressed: bool):
         '''
         taking input from the player and changing the player's vector accordingly
         '''
-        keys = pygame.key.get_pressed()
+        # keys = pygame.key.get_pressed()
         current_speed = math.sqrt(self.vector[0] ** 2 + self.vector[1] ** 2)
         max_speed = self.max_speed
+        print(c_pressed, keys[pygame.K_c])
+        if c_pressed == False and keys[pygame.K_c]:
+            if self.mode == CameraMode.fixed:
+                self.mode = CameraMode.rotated
+            else:
+                self.mode = CameraMode.fixed
         if self.mode == CameraMode.fixed:
             if keys[pygame.K_w] and current_speed < max_speed: # if w key is pressed, accelerate up
                 self.vector[1] += 0.1
@@ -211,9 +222,9 @@ class World:
                 self.vector[0] += 0.1
             if keys[pygame.K_d] and current_speed < max_speed: # if d key is pressed, accelerate right
                 self.vector[0] -= 0.1
-            if any([keys[pygame.K_w], keys[pygame.K_s]]) == False or current_speed > max_speed: # if w and s key is not pressed, slow down in the y axis
+            if any([keys[pygame.K_w], keys[pygame.K_s], keys[pygame.K_SPACE]]) == False or current_speed > max_speed: # if w and s key is not pressed, slow down in the y axis
                 self.vector[1] *= 0.995
-            if any([keys[pygame.K_a], keys[pygame.K_d]]) == False or current_speed > max_speed: # if a and d key is not pressed, slow down in the x axis
+            if any([keys[pygame.K_a], keys[pygame.K_d], keys[pygame.K_SPACE]]) == False or current_speed > max_speed: # if a and d key is not pressed, slow down in the x axis
                 self.vector[0] *= 0.995
             if self.vector[2]:
                 self.vector[2] *= 0.95
@@ -239,7 +250,10 @@ class World:
             self.laser_init()
             self.stopwatch = time.time()
         self.vector[0], self.vector[1] = find_rotated_point(self.vector[0], self.vector[1], self.vector[2])
-    
+        if keys[pygame.K_SPACE]:
+                self.vector[0] *= 0.9
+                self.vector[1] *= 0.9
+                self.vector[2] *= 0.9
     def handle_collision(self):
         '''
         calculates the collision between the player and the asteroids, and the asteroids with each other
@@ -357,7 +371,7 @@ class World:
         prints the debug information
         '''
         # print(len(self.laser_list))
-        print(self.face_angle)
+        # print(self.face_angle)
         # print(self.mode)
         # print(self.laser_list)
         # print(self.laser_vectors)
