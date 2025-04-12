@@ -15,7 +15,8 @@ screen = pygame.display.set_mode((width, height))
 game = World((width, height), 800)
 # Game loop.
 c_pressed = False
-while True:
+run = True
+while run:
     screen.fill((0, 0, 0))
   
     for event in pygame.event.get():
@@ -26,17 +27,19 @@ while True:
     # Update.
     k = pygame.key.get_pressed()
     game.process_world()
-    if k[K_ESCAPE]:
-        break
+    
     current_fps = fpsClock.get_fps()
     # print(space_pressed)
-    game.process_world()
     game.handle_input(k, c_pressed)
+    run = game.process_world()
     game.check_stars()
     game.draw(current_fps)
     game.debug()
     # print(space_pressed)
+    
     pygame.display.flip()
     fpsClock.tick(fps)
     # print(fpsClock.get_fps())
+    if k[K_ESCAPE]:
+        run = False
     c_pressed = k[K_c]
