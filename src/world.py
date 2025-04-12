@@ -129,21 +129,21 @@ class Bumper(Enemy):
     def check_collision_bumper(self, bumper_list):
         # check if the bumper collides with another bumper
         for bumper in bumper_list:
-            if self.rect.colliderect(bumper.rect) and self != bumper:
-                # self.x += 1
-                # pygame.draw.rect(pygame.display.get_surface(), (0, 0, 255), self.rect)
-                if self.rect.y > bumper.rect.y:
-                    self.rect.y += 1
-                    self.y += 1
-                if self.rect.y < bumper.rect.y:
-                    self.rect.y -= 1
-                    self.y -= 1
-                if self.rect.x > bumper.rect.x:
-                    self.rect.x += 1
-                    self.x += 1
-                if self.rect.x < bumper.rect.x:
-                    self.rect.x -= 1
-                    self.x -= 1
+            if not self.rect.colliderect(bumper.rect) or self == bumper:
+                continue
+            # pygame.draw.rect(pygame.display.get_surface(), (0, 0, 255), self.rect)
+            if self.rect.y > bumper.rect.y:
+                self.rect.y += 1
+                self.y += 1
+            if self.rect.y < bumper.rect.y:
+                self.rect.y -= 1
+                self.y -= 1
+            if self.rect.x > bumper.rect.x:
+                self.rect.x += 1
+                self.x += 1
+            if self.rect.x < bumper.rect.x:
+                self.rect.x -= 1
+                self.x -= 1
     def check_collision_asteroid(self, asteroid_list):
         # check if the bumper collides with an asteroid
         for asteroid in asteroid_list:
@@ -160,7 +160,7 @@ class Bumper(Enemy):
                 if self.rect.x < asteroid.rect.x:
                     self.rect.x -= 1
                     self.x -= 1
-                self.health -= 0.01
+                self.health -= 0.01 * math.sqrt(asteroid.vector[0] ** 2 + asteroid.vector[1] ** 2)
 
 class Asteroid(Movement):
     '''
@@ -269,7 +269,7 @@ class World:
         self.stars = [] # all the stars in the background, would be stored in as an array of Star objects
         self.asteroids = [] # all the asteroids in the background, would be stored in as an array of Asteroid objects
 
-        self.enemies = [] # all the enemies in the background, would be stored in as an array of Enemy objects
+        self.bumpers = [] # all the enemies in the background, would be stored in as an array of Enemy objects
 
         self.laser_list = [] # all the lasers in the background, would be stored in as an array of Laser objects
 
@@ -287,9 +287,11 @@ class World:
         self.face_angle = 0 # the angle the player is facing, used in the rotated mode
         self.max_speed = 12 # how fast the player can go
         self.max_angular_speed = 1 # how fast the player can rotate (in radians)
+        self.max_health = 500
+        self.health = 500
         # defining all the images
         # self.base_laser_image = pygame.transform.scale(pygame.image.load("assets/images/laser.png"), (50, 100))
-        self.base_asteroid_image = pygame.transform.scale(pygame.image.load("assets/images/asteroid.png"), (80, 80))
+        # self.base_asteroid_image = pygame.transform.scale(pygame.image.load("assets/images/asteroid.png"), (80, 80))
         self.base_spaceship_image = pygame.transform.scale(pygame.image.load("assets/images/spaceship.png"), (100, 100))
         self.font = pygame.font.SysFont("Arial", 20)
         # creating a stopwatch, used in the laser_init method
@@ -304,9 +306,9 @@ class World:
              # and looks more interesting
             radius = randint(1, 3)
             self.stars.append(Star(x, y, radius)) # adding each star to the list
-        for i in range(5):
-            self.enemies.append(Bumper(self.render_distance)) # adding an enemy to the list
-        # self.enemies[0].random_position() # generating a random position for the enemy
+        for i in range(100):
+            self.bumpers.append(Bumper(self.render_distance)) # adding an enemy to the list
+        # self.bumpers[0].random_position() # generating a random position for the enemy
     # def laser_init(self):
     #     '''
     #     initializes a laser bullet
@@ -365,6 +367,11 @@ class World:
         # Draw the image at the corrected position
         screen.blit(rotated_image, rotated_rect.topleft)
 
+        # draw health bar
+        pygame.draw.rect(screen, (255, 0, 0), (self.screen_size[0] // 2 - 500, self.screen_size[1] - 40, 1000, 25))
+        pygame.draw.rect(screen, (0, 255, 0), (self.screen_size[0] // 2 - 500, self.screen_size[1] - 40, (self.health / self.max_health) * 1000, 25))
+        self.font.render("health", True, (255, 255, 255))
+        screen.blit(self.font.render("HEALTH", True, (0, 0, 0)), (self.screen_size[0] // 2 - 20, self.screen_size[1] - 40))
     
     def render_lasers(self):
         '''
@@ -395,7 +402,7 @@ class World:
         renders the enemies
         '''
         screen = pygame.display.get_surface()
-        for enemy in self.enemies:
+        for enemy in self.bumpers:
             # pygame.draw.circle(screen, (255, 0, 0), (enemy.x, enemy.y), 20)
             enemy.render(screen)
             if enemy.health != 100:
@@ -494,7 +501,7 @@ class World:
         elif self.mode == CameraMode.rotated:
             self.handle_player_acceleration_rotated(keys, self.max_speed)
         
-        if keys[pygame.K_e] and (time.time() - self.stopwatch) > 0.10 and len(self.laser_list) < 20:
+        if (keys[pygame.K_e] or pygame.mouse.get_pressed()[0])and (time.time() - self.stopwatch) > 0.10 and len(self.laser_list) < 20:
             
             self.laser_list.append(laser(self.mode, self.face_angle_fixed, self.vector))
             self.stopwatch = time.time()
@@ -507,6 +514,8 @@ class World:
         '''
         calculates the collision between the player and the asteroids, and the asteroids with each other
         '''
+
+    
         # player and asteroid
         for asteroid in self.asteroids:
             asteroid_collis_check_rect = pygame.rect.Rect(asteroid.x - 40, asteroid.y - 40, 80, 80)
@@ -535,7 +544,7 @@ class World:
                     self.asteroids[i].vector[1], self.asteroids[j].vector[1] = self.asteroids[j].vector[1], self.asteroids[i].vector[1]
     
     # def process_enemy(self):
-    #     for enemy in self.enemies:
+    #     for enemy in self.bumpers:
     #         enemy.x += enemy.vector[0]
     #         enemy.y += enemy.vector[1]
     def process_world(self) -> bool:
@@ -543,6 +552,8 @@ class World:
         processes the world
         updates the coordinates of every object in the game
         '''
+        self.asteroids[0].x = self.screen_size[0] // 2 - self.vector[0] * 6
+        self.asteroids[0].y = self.screen_size[1] // 2 - self.vector[1] * 6 - 100
         # self.process_enemy()
         self.face_angle_fixed = math.atan2(self.vector[1], self.vector[0])
         # moving the star
@@ -559,7 +570,7 @@ class World:
             # laser.move(self.vector)
             laser.update(self.vector)
             hit_asteroid = (laser.check_collision_asteroid(self.asteroids))
-            hit_bumper = (laser.check_collision_bumper(self.enemies))
+            hit_bumper = (laser.check_collision_bumper(self.bumpers))
             if hit_asteroid[0]:
                 self.laser_list.remove(laser)
                 self.asteroids.append(Asteroid(self.asteroids[hit_asteroid[1]].x * 10, self.asteroids[hit_asteroid[1]].y * 10, [randint(-2, 2), randint(-2, 2), 0]))
@@ -568,23 +579,23 @@ class World:
             
             elif hit_bumper[0]:
                 self.laser_list.remove(laser)
-                self.enemies[hit_bumper[1]].health -= 10
+                self.bumpers[hit_bumper[1]].health -= 10
 
             elif laser.check_out_of_bounds():
                 self.laser_list.remove(laser)
             
             
-        for bumper in self.enemies:
+        for bumper in self.bumpers:
             if bumper.health <= 0:
-                self.enemies.remove(bumper)
-                self.enemies.append(Bumper(self.render_distance))
+                self.bumpers.remove(bumper)
+                self.bumpers.append(Bumper(self.render_distance))
                 print("enemy dead")
             bumper.update_bumper(self.vector)
-            bumper.check_collision_bumper(self.enemies)
+            bumper.check_collision_bumper(self.bumpers)
             bumper.check_collision_asteroid(self.asteroids)
             if bumper.check_collision_player(self.vector):
                 # return True
-                pass
+                self.health -= 0.01
             
         # moving the asteroids
         for asteroid in self.asteroids:
