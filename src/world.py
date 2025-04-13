@@ -175,7 +175,7 @@ class Among_Us(Sprite, Movement):
         self.current_angle += self.angular_velocity
         self.image = pygame.transform.rotate(self.base_image, math.degrees(self.current_angle))
         self.rect = self.image.get_rect(center=(self.x, self.y))
-        print(self.x, self.y)
+        # print(self.x, self.y)
     
 class World:
     '''
@@ -212,7 +212,7 @@ class World:
         
         self.screen_size = screen_size # (width, height)
         self.screen = screen
-        print(type(self.screen))
+        # print(type(self.screen))
         # self.render_distance = render_distance # when to calculate things
         # self.coordinates = [0,0,0] # where the player is at
         self.rotated_angle = 0 # how much the player has rotated, not used if it is currently fixed mode
@@ -550,7 +550,7 @@ class World:
         taking input from the player and changing the player's vector accordingly
         '''
         keys = pygame.key.get_pressed()
-        print(c_pressed, keys[pygame.K_c])
+        # print(c_pressed, keys[pygame.K_c])
         if pygame.mouse.get_pressed()[2] and time.time() - self.bomb_stopwatch > 60: # only 1 bomb each minute and cannot "hold" bombs to the next minute
             self.bombs.append(Bomb(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]))
             self.bomb_stopwatch = time.time() # reset the timer
@@ -587,7 +587,7 @@ class World:
                 # swap relative velocity
                 self.vector[0], asteroid.vector[0] = -asteroid.vector[0], -self.vector[0]
                 self.vector[1], asteroid.vector[1] = -asteroid.vector[1], -self.vector[1]
-                print("collision")
+                # print("collision")
             
             # to prevent the player clipping into the asteroids, the asteroids would move until it is not touching the player
             if asteroid_collis_check_rect.colliderect(player_collis_check_rect) and asteroid.x > SCREEN_WIDTH // 2: 
@@ -680,7 +680,7 @@ class World:
                 self.bumpers.remove(bumper)
                 self.explosions.append(Explosion(bumper.x, bumper.y, self.explosion_sound))
                 self.player_score += 20 # if the bumper dies, add 20 to the player's score
-                print("enemy dead")
+                # print("enemy dead")
             bumper.update_bumper(self.vector)
             bumper.check_collision_bumper(self.bumpers)
             bumper.check_collision_asteroid(self.asteroids)
