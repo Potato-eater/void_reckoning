@@ -19,6 +19,9 @@ TURRET_SPAWN_TIME = 20
 BUMPER_SPEED_UPDATE_TIME = 30
 TURRET_SHOOTING_SPEED_UPDATE_TIME = 20
 
+MAX_ASTEROID = 10
+MAX_BUMPER = 20
+MAX_TURRET = 10
 init()
 screen_info = display.Info()
 SCREEN_WIDTH, SCREEN_HEIGHT = screen_info.current_w, screen_info.current_h

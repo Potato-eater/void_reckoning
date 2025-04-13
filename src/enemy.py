@@ -97,7 +97,10 @@ class Bumper(Enemy):
 
 class Turret(Enemy, HealthBar):
     def __init__(self, render_distance, shooting_speed):
-        self.base_image = pygame.image.load("assets/images/turret.png")
+        try:
+            self.base_image = pygame.image.load("assets/images/turret.png")
+        except FileNotFoundError:
+            print("turret image not found")
         frame1_rect = pygame.rect.Rect(0, 0, 34, 62)
         frame2_rect = pygame.rect.Rect(34, 0, 34, 62)
         frame3_rect = pygame.rect.Rect(68, 0, 34, 62)
@@ -149,7 +152,10 @@ class Turret(Enemy, HealthBar):
 class TurretBullet(Movement, Sprite):
     def __init__(self, x: int, y: int, vector: list[float, float], speed: float = 10.0):
         Movement.__init__(self, x, y, vector)
-        self.image = pygame.image.load("assets/images/turret_bullet.png")
+        try:
+            self.image = pygame.image.load("assets/images/turret_bullet.png")
+        except FileNotFoundError:
+            print("turret bullet image not found")
         Sprite.__init__(self, x, y, self.image)
         self.x = x - 16
         self.y = y - 16

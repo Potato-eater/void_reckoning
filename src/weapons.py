@@ -1,3 +1,4 @@
+import pygame.locals
 from parents import *
 class CameraMode(Enum):
     # there are two modes for the camera
@@ -23,9 +24,11 @@ class Laser(Movement):
         
         shoots in the direction the player is facing
         '''
-        self.base_image = pygame.transform.scale(pygame.image.load("assets/images/laser.png"), (30, 50))
-
-        sound = pygame.mixer.Sound("assets\sounds\laser_gun.mp3")
+        try:
+            self.base_image = pygame.transform.scale(pygame.image.load("assets/images/laser.png"), (30, 50))
+        except FileNotFoundError:
+            print("something is wrong with loading the laser image")
+        sound = pygame.mixer.Sound("assets/sounds/laser_gun.mp3")
         sound.play()
         image = self.base_image.copy()
         screen = pygame.display.get_surface()

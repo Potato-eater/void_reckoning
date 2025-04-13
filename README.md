@@ -13,7 +13,7 @@
 ### functional requirements
 - player combat system
     - the player can currently shoot laser bullets. When the bullets hit asteroids and enemies, the bullet would deal damage to the object that got hit
-    - there was a plan to implement a "bomb" which the player can click on the screen and a circle would appear, killing everything inside of it, but I felt like it was too powerful and game breaking. It also caused a lot of lag.
+    - there is also a "bomb" that the player can place once every minute. A circle would expane and everything that touches it would directly die.
 - Progressively harder gameplay
     - The longer the player stays in the game alive, the more enemies and asteroids would spawn. the enemies would also travel and attack faster.
 - Physics based movement system

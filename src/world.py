@@ -39,7 +39,10 @@ class Asteroid(Movement):
     def __init__(self, x: int, y: int, vector: list[float]):
         '''creates the asteroid object'''
         super().__init__(x, y, vector)
-        self.base_image = pygame.transform.scale(pygame.image.load("assets/images/asteroid.png"), (80, 80))
+        try:
+            self.base_image = pygame.transform.scale(pygame.image.load("assets/images/asteroid.png"), (80, 80))
+        except FileNotFoundError:
+            print("asteroid image not found")
         self.image = self.base_image.copy()
         self.rect = self.base_image.get_rect(center=(x, y))
     def update(self, player_vector: list[float], player_angle: float = 0.0):
@@ -70,12 +73,14 @@ class Explosion(Sprite, Movement):
     object for showing explosions (for when objects die)
     '''
     def __init__(self, x, y, explosion_sound: pygame.mixer.Sound, scale: float = 1.0,):
-
-        self.base_image = pygame.transform.scale(pygame.image.load("assets/images/explosion.png"), (768, 512))
+        try:
+            self.base_image = pygame.transform.scale(pygame.image.load("assets/images/explosion.png"), (768, 512))
+        except FileNotFoundError:
+            print("explosion image not found")
         if randint(1,2) == 1:
-            explosion_sound = pygame.mixer.Sound("assets\sounds\explosion.mp3")
+            explosion_sound = pygame.mixer.Sound("assets/sounds/explosion.mp3")
         else:
-            explosion_sound = pygame.mixer.Sound("assets\sounds\explosion2.mp3")
+            explosion_sound = pygame.mixer.Sound("assets/sounds/explosion2.mp3")
         explosion_sound.set_volume(0.4)
         explosion_sound.play()
         frame_width = 256
@@ -153,7 +158,10 @@ class Among_Us(Sprite, Movement):
     to the star background in the among us game.
     '''
     def __init__(self):
-        self.base_image = pygame.image.load("assets\images\\amongus.png")
+        try:
+            self.base_image = pygame.image.load("assets/images/amongus.png")
+        except FileNotFoundError:
+            print("among us image not found")
         self.base_image = pygame.transform.scale(self.base_image, (40, 40))
         coordinates = Enemy._random_coordinate(RENDER_DISTANCE)
         self.angular_velocity = randint(-1, 1) / 10
@@ -209,7 +217,7 @@ class World:
         # self.coordinates = [0,0,0] # where the player is at
         self.rotated_angle = 0 # how much the player has rotated, not used if it is currently fixed mode
         self.mode: CameraMode = CameraMode.fixed # what mode the camera is in
-        self.explosion_sound = pygame.mixer.Sound("assets\sounds\explosion2.mp3")
+        self.explosion_sound = pygame.mixer.Sound("assets/sounds/explosion2.mp3")
         
         self.vector = [0,2,0] # how the player's coordinates would increase each loop (x, y, r)
         self.face_angle_fixed = 0 # the angle the player is facing
@@ -262,16 +270,34 @@ class World:
         '''
         renders the player's spaceship
         '''
-        spaceship_image = pygame.image.load("assets\images\question_mark.png")
+        try:
+            spaceship_image = pygame.image.load("assets/images/question_mark.png")
+        except:
+            print("spaceship image not found")
         speed = math.sqrt(self.vector[0] ** 2 + self.vector[1] ** 2)
         if self.vector[1] <= -2 and self.mode == CameraMode.rotated:
-            spaceship_image = pygame.transform.scale(pygame.image.load("assets\images\spaceship-4.png"), (100, 100))
+            try:
+                spaceship_image = pygame.transform.scale(pygame.image.load("assets/images/spaceship-4.png"), (100, 100))
+            except FileNotFoundError:
+                print("spaceship 4 image not found")
         elif speed < 2:
-            spaceship_image = spaceship_image = pygame.transform.scale(pygame.image.load("assets\images\spaceship-1.png"), (100, 100))
+            try:
+                spaceship_image = pygame.transform.scale(pygame.image.load("assets/images/spaceship-1.png"), (100, 100))
+            except FileNotFoundError:
+                print("spaceship 1 image not found")
+
         elif speed >= 2 and speed < 12:
-            spaceship_image = pygame.transform.scale(pygame.image.load("assets\images\spaceship-2.png"), (100, 100))
+            try:
+                spaceship_image = pygame.transform.scale(pygame.image.load("assets/images/spaceship-2.png"), (100, 100))
+            except FileNotFoundError:
+                print("spaceship 2 image not found")
+
         elif speed >= 12:
-            spaceship_image = pygame.transform.scale(pygame.image.load("assets\images\spaceship-3.png"), (100, 100))
+            try:
+                spaceship_image = pygame.transform.scale(pygame.image.load("assets/images/spaceship-3.png"), (100, 100))
+            except FileNotFoundError:
+                print("spaceship 3 image not found")
+
         
 
         # Calculate the rotation angle
@@ -365,9 +391,20 @@ class World:
         green arrow for bumpers
         '''
         player_xy = [SCREEN_WIDTH // 2 - self.vector[0] * 6, SCREEN_HEIGHT // 2 - self.vector[1] * 6]
-        grey_arrow = pygame.image.load("assets\images\\arrow_1.png")
-        purple_arrow = pygame.image.load("assets\images\\arrow_2.png")
-        green_arrow = pygame.image.load("assets\images\\arrow_3.png")
+        try:
+            grey_arrow = pygame.image.load("assets/images/arrow_1.png")
+        except FileNotFoundError:
+            print("grey arrow image not found")
+        
+        try:
+            purple_arrow = pygame.image.load("assets/images/arrow_2.png")
+        except FileNotFoundError:
+            print("purple arrow image not found")
+
+        try:
+            green_arrow = pygame.image.load("assets/images/arrow_3.png")
+        except FileNotFoundError:
+            print("green arrow image not found")
         for asteroid in self.asteroids:
             dx, dy = asteroid.x - player_xy[0], asteroid.y - player_xy[1]
             angle = math.degrees(math.atan2(dy, dx))
@@ -400,15 +437,17 @@ class World:
         self.screen.blit(self.font.render("use wasd to control direction", True, (255, 255, 255)), (10, 10))
         self.screen.blit(self.font.render("press c to change camera mode", True, (255, 255, 255)), (10, 30))
         self.screen.blit(self.font.render("press e or LMB to shoot", True, (255, 255, 255)), (10, 50))
-        self.screen.blit(self.font.render("press esc to exit", True, (255, 255, 255)), (10, 70))
-        self.screen.blit(self.font.render("press space to slow down", True, (255, 255, 255)), (10, 90))
-        self.screen.blit(self.font.render(f"current fps: {round(current_fps, 2)}", True, (255, 255, 255)), (10, 110))
-        self.screen.blit(self.font.render(f"{self.changing_mode}", True, (255, 255, 255)), (10, 150))
+        self.screen.blit(self.font.render("press RMB to place bomb", True, (255, 255, 255)), (10, 70))
+        self.screen.blit(self.font.render("press esc to exit", True, (255, 255, 255)), (10, 90))
+        self.screen.blit(self.font.render("press space to slow down", True, (255, 255, 255)), (10, 110))
+        self.screen.blit(self.font.render(f"current fps: {round(current_fps, 2)}", True, (255, 255, 255)), (10, 130))
+        # self.screen.blit(self.font.render(f"{self.changing_mode}", True, (255, 255, 255)), (10, 150))
         # self.screen.blit(self.font.render(f"amount of bumpers: {len(self.bumpers)}", True, (255, 255, 255)), (10, 150))
         # self.screen.blit(self.font.render(f"facing: {self.face_angle}", True, (255, 255, 255)), (10, 170))
         # self.screen.blit(self.font.render(f"face_angle_fixed: {((math.degrees(self.face_angle_fixed) - 90 + 180) % 360) - 180}", True, (255, 255, 255)), (10, 190))
         # self.screen.blit(self.font.render(f"transition facing {self.transition_facing}", True, (255, 255, 255)), (10, 210))
-        self.screen.blit(self.font.render(f"current game time {round(time.time() - self.start_time, 2)}", True, (255, 255, 255)), (10, 130))
+        self.screen.blit(self.font.render(f"current game time {round(time.time() - self.start_time, 2)}", True, (255, 255, 255)), (10, 150))
+        self.screen.blit(self.font.render(f"bomb available: {time.time() - self.bomb_stopwatch > 60}", True, (255, 255, 255)), (10, 170))
         score = pygame.font.Font(None, 50).render(f"SCORE: {self.player_score}", True, (255, 255, 255))
         score_rect = score.get_rect(center=(SCREEN_WIDTH//2, 50))
         self.screen.blit(score, score_rect)
@@ -583,14 +622,14 @@ class World:
         '''
         current_time = time.time()
         # print((current_time - self.bumper_time))
-        if current_time - self.asteroids_time > ASTEROID_SPAWN_TIME:
+        if current_time - self.asteroids_time > ASTEROID_SPAWN_TIME and len(self.asteroids) < MAX_ASTEROID:
             random_xy = Enemy._random_coordinate(RENDER_DISTANCE)
             self.asteroids.append(Asteroid(random_xy[0], random_xy[1], [randint(-2, 2), randint(-2, 2), 0]))
             self.asteroids_time = current_time
-        if current_time - self.bumper_time > BUMPER_SPAWN_TIME:
+        if current_time - self.bumper_time > BUMPER_SPAWN_TIME and len(self.bumpers) < MAX_BUMPER:
             self.bumpers.append(Bumper(RENDER_DISTANCE, self.bumper_speed))
             self.bumper_time = current_time
-        if current_time - self.turret_time > TURRET_SPAWN_TIME:
+        if current_time - self.turret_time > TURRET_SPAWN_TIME and len(self.turrets) < MAX_TURRET:
             self.turrets.append(Turret(RENDER_DISTANCE, self.turret_shooting_speed))
             self.turret_time = current_time
         if current_time - self.bumper_speed_time > BUMPER_SPEED_UPDATE_TIME:
