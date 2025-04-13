@@ -7,12 +7,13 @@ import time
 # import movement
 from random import randint
 class Movement:
+    '''a generic class that handles all the movement logic'''
     def __init__(self, x: int, y: int, vector: list[float, float]):
         self.x = x
         self.y = y
         self.vector = vector
     def move(self, player_vector: list[float, float, float]):
-        
+        '''actually moving the object'''
         screen = pygame.display.get_surface()
         width = screen.get_width() // 2
         height = screen.get_height() // 2
@@ -26,6 +27,7 @@ class Movement:
         self.y += player_vector[1]
         return [self.x, self.y]
 class Sprite:
+    '''a generic class that handles rendering sprites'''
     def __init__(self, x: int, y: int, image: pygame.Surface):
         self.image = image
         self.rect = image.get_rect(center=(x, y))
@@ -34,6 +36,7 @@ class Sprite:
         # pygame.draw.rect(screen, (0, 0, 255), self.rect, 1)
 
 class HealthBar:
+    '''a generic class that process health for its child classes'''
     def __init__(self, x: int, y: int, max_health=100, health=100):
         self.max_health = max_health
         self.health = health

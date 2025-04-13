@@ -18,9 +18,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # print(width, height)
 
-title_screen = False
+title_screen = True
 title_star_vect = [randint(-500, 500) / 100.0, randint(-500, 500) / 100.0, 0]
-end_screen = True
+end_screen = False
 score = 0
 game = World((SCREEN_WIDTH, SCREEN_HEIGHT), screen)
 
@@ -73,7 +73,6 @@ while run:
             game = World((SCREEN_WIDTH, SCREEN_HEIGHT), screen)
             # game.start_game()
     elif end_screen:
-        score = 500
         with open("assets\\high_score.txt", "r") as file:
             highscore = int(file.readline())
         with open("assets\\high_score.txt", "w") as file:
