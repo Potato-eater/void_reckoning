@@ -8,7 +8,7 @@ from random import randint
 pygame.init()
 pygame.mixer.init()
 pygame.mixer.music.load("assets\sounds\Galactic Rhapsody.mp3")
-pygame.mixer.music.play()
+pygame.mixer.music.play(loops=-1)
 beep = pygame.mixer.Sound("assets\sounds\\beep.mp3")
 fps = 60
 fpsClock = pygame.time.Clock()
@@ -69,7 +69,7 @@ while run:
             beep.play()
             title_screen = False
             pygame.mixer.music.load("assets\sounds\Time Traveler's Serenade.mp3")
-            pygame.mixer.music.play()   
+            pygame.mixer.music.play(loops=-1) 
             game = World((SCREEN_WIDTH, SCREEN_HEIGHT), screen)
             # game.start_game()
     elif end_screen:
@@ -121,14 +121,14 @@ while run:
             beep.play()
             end_screen = False
             pygame.mixer.music.load("assets\sounds\Time Traveler's Serenade.mp3")
-            pygame.mixer.music.play()   
+            pygame.mixer.music.play(loops=-1)   
             game = World((SCREEN_WIDTH, SCREEN_HEIGHT), screen)
     
     else:
         end_screen = not game.process_world()
         if end_screen == True:
             pygame.mixer.music.load("assets\sounds\Stardust Symphony.mp3")
-            pygame.mixer.music.play()
+            pygame.mixer.music.play(loops=-1)
             score = game.player_score
         game.handle_input(k, c_pressed)
         # run = game.process_world()
